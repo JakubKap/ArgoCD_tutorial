@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: myapp-argo-application
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://gitlab.com/nanuchi/argocd-app-config.git
+    targetRevision: HEAD
+    path: dev
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: myapp #all configurations will be created in new namespace (myapp)
+
+  syncPolicy:
+    syncOptions:
+    - CreateNamespace=true #will create namespace myapp if not existing
+
+    automated:
+      selfHeal: true
+      prune: true #if yaml is deleted, ArgoCD will delete resources on cluster consequently
