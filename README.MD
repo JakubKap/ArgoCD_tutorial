@@ -1,47 +1,73 @@
-### ArgoCD Tutorial ###
-Based on https://www.youtube.com/watch?v=MeU5_k9ssrs
+# ArgoCD Tutorial
 
-### Purpose ###
-ArgoCD is constantly checking changes residing on https://gitlab.com/nanuchi/argocd-app-config.git repository
-and compare state of local with it. After that, if necessary it updates state of local repo.
+Based on [YouTube Tutorial](https://www.youtube.com/watch?v=MeU5_k9ssrs) by Nana
 
-### Assumptions ###
-Project is created with an assumption that cluster will be automatically updated by 
-ArgoCD only locally.
+## Purpose
 
-### Prerequisities ###
-ArgoCD should be installed with following commands (after starting minikube locally):
-```kubectl create namespace argocd```
-```kubectl apply -n argocd --server-side --force-conflicts -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml```
+ArgoCD continuously monitors the [ArgoCD_tutorial](https://github.com/JakubKap/ArgoCD_tutorial) repository and compares its state with the local cluster. When drift is detected, ArgoCD automatically synchronizes the cluster to match the Git repository.
 
+## Assumptions
 
-### Accessing ArgoCD website ###
-Fetch port of *argocd-server* with command ```kubectl get svc -n argocd```
+- This project assumes ArgoCD runs locally via Minikube
+- Automatic cluster updates are performed only in a local environment
 
-C:\Users\kubix>kubectl get svc -n argocd
-NAME                                      TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                      AGE
-argocd-applicationset-controller          ClusterIP   10.109.83.23     <none>        7000/TCP,8080/TCP            2m53s
-argocd-dex-server                         ClusterIP   10.107.224.222   <none>        5556/TCP,5557/TCP,5558/TCP   2m53s
-argocd-metrics                            ClusterIP   10.99.215.118    <none>        8082/TCP                     2m53s
-argocd-notifications-controller-metrics   ClusterIP   10.106.153.54    <none>        9001/TCP                     2m53s
-argocd-redis                              ClusterIP   10.97.211.82     <none>        6379/TCP                     2m53s
-argocd-repo-server                        ClusterIP   10.105.246.250   <none>        8081/TCP,8084/TCP            2m53s
-**argocd-server**                             ClusterIP   10.103.222.7     <none>        /TCP,<span style="color: red;">**443**</span>/TCP               2m53s
-argocd-server-metrics                     ClusterIP   10.105.140.67    <none>        8083/TCP                     2m53s
+## Prerequisites
 
-and then port forward:
-```kubectl port-forward -n argocd svc/argocd-server 8080:443```
+Install ArgoCD in your cluster:
 
-Then, ArgoCD UI will be accessible through localhost:8080
+```bash
+kubectl create namespace argocd
+kubectl apply -n argocd --server-side --force-conflicts -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+```
 
-Username is admin and password can be obtained by running following commands:
-```kubectl get secret argocd-initial-admin-secret -n argocd -o yaml``` <= password encoded in Base64
-```echo <PASSWORD_FROM_PREVIOUS_POINT> | base64 --decode```
+## Accessing ArgoCD UI
 
-### Applying ArgoCD configuration ###
-```kubectl apply -f application.yaml```
+1. Verify the argocd-server port (default is 443):
 
-### ArgoCD dashboard ###
+   ```bash
+   kubectl get svc -n argocd
+   ```
+
+   Expected output:
+
+   ```
+   NAME                            TYPE        CLUSTER-IP     PORT(S)                      AGE
+   argocd-server                   ClusterIP   10.103.222.7   443/TCP                      2m53s
+   ...
+   ```
+
+   Note the **PORT(S)** column value for `argocd-server` (typically `443/TCP`).
+
+2. Port forward to access the UI (adjust the port if different):
+
+   ```bash
+   kubectl port-forward -n argocd svc/argocd-server 8080:443
+   ```
+
+3. Open `http://localhost:8080` in your browser
+
+### Default Credentials
+
+- **Username:** `admin`
+- **Password:** Retrieve and decode the initial admin secret:
+   ```bash
+   kubectl get secret argocd-initial-admin-secret -n argocd -o yaml
+   echo <PASSWORD_FROM_YAML> | base64 --decode
+   ```
+
+## Deploying an Application
+
+Apply the ArgoCD application configuration:
+
+```bash
+kubectl apply -f application.yaml
+```
+
+## Dashboard
+
 ![ArgoCD dashboard](./readme_assets/argo_dashboard.png)
 
-//TODO Fix gitignore with AI
+## Resources
+
+- [ArgoCD Documentation](https://argo-cd.readthedocs.io/)
+- [ArgoCD GitHub](https://github.com/argoproj/argo-cd)
